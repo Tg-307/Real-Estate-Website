@@ -1,0 +1,30 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Add Potential Buyer{% endblock %}
+{% block nav_addbuyer %}active{% endblock %}
+{% block topbar_title %}Register Potential Buyer{% endblock %}
+{% block content %}
+<div class="card" style="max-width:800px">
+  <div class="card-header"><h3><i class="fas fa-user-tag"></i> Buyer Preferences</h3></div>
+  <div class="card-body">
+    <form method="post">{% csrf_token %}
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label required">First Name</label><input type="text" name="first_name" class="form-control" required></div>
+        <div class="form-group"><label class="form-label required">Last Name</label><input type="text" name="last_name" class="form-control" required></div>
+        <div class="form-group"><label class="form-label required">Contact Number</label><input type="text" name="contact_no" class="form-control" required maxlength="20"></div>
+        <div class="form-group"><label class="form-label">Preferred Type</label><select name="preferred_type" class="form-control form-select"><option value="">Any</option><option value="residential">Residential</option><option value="commercial">Commercial</option><option value="land">Land</option><option value="industrial">Industrial</option></select></div>
+        <div class="form-group"><label class="form-label">Preferred BHK</label><input type="number" name="preferred_bhk" class="form-control" min="1" max="10" placeholder="e.g. 3"></div>
+        <div class="form-group"><label class="form-label">Preferred City</label><input type="text" name="preferred_city" class="form-control" placeholder="e.g. Guwahati" maxlength="20"></div>
+        <div class="form-group"><label class="form-label">Preferred State</label><input type="text" name="preferred_state" class="form-control" value="Assam" maxlength="20"></div>
+        <div class="form-group"><label class="form-label">Min Price &#8377;</label><input type="number" name="min_price" class="form-control" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Max Price &#8377;</label><input type="number" name="max_price" class="form-control" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Preferred Min Area (sqft)</label><input type="number" name="preferred_area" class="form-control" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Looking to</label><select name="choice" class="form-control form-select"><option value="">Any</option><option value="Buy">Buy</option><option value="Rent">Rent</option></select></div>
+      </div>
+      <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Register Buyer</button>
+        <a href="{% url 'agent_dashboard' %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

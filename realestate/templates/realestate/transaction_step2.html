@@ -1,0 +1,102 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Transaction — Step 2{% endblock %}
+{% block topbar_title %}Transaction — Verify Buyer{% endblock %}
+{% block extra_css %}
+<script>
+function checkAadhar() {
+  const a = document.getElementById('aadhar_input').value.trim();
+  if (a.length !== 12 || !/^\d+$/.test(a)) {
+    document.getElementById('aadhar_err').textContent = 'Aadhar must be exactly 12 digits.';
+    return;
+  }
+  document.getElementById('aadhar_err').textContent = '';
+  fetch(`/ajax/check-aadhar/?aadhar=${a}`)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('aadhar_result').innerHTML = '';
+      if (d.found) {
+        document.getElementById('aadhar_result').innerHTML = `
+          <div class="alert alert-info" style="margin-top:.75rem">
+            <i class="fas fa-check-circle"></i>
+            Customer found: <strong>${d.first_name} ${d.last_name}</strong> (${d.phone}) — ${d.role_type}
+          </div>
+          <form method="post" action="?step=3">{% csrf_token %}
+            <input type="hidden" name="buyer_id" value="{{ buyer_id }}">
+            <input type="hidden" name="customer_id" value="${d.customer_id}">
+            <input type="hidden" name="use_existing" value="1">
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.75rem">
+              <button type="submit" class="btn btn-primary"><i class="fas fa-arrow-right"></i> Use This Customer → Proceed</button>
+            </div>
+          </form>`;
+      } else {
+        document.getElementById('aadhar_result').innerHTML = `
+          <div class="alert alert-success" style="margin-top:.75rem">
+            <i class="fas fa-info-circle"></i> No customer with this Aadhar found. Please fill in the new customer's details.
+          </div>
+          <div id="new_cust_form"></div>`;
+        showNewCustomerForm(a);
+      }
+    });
+}
+function showNewCustomerForm(aadhar) {
+  document.getElementById('new_cust_form').innerHTML = `
+    <form method="post" action="?step=3">{% csrf_token %}
+      <input type="hidden" name="buyer_id" value="{{ buyer_id }}">
+      <input type="hidden" name="use_existing" value="0">
+      <input type="hidden" name="cust_aadhar" value="${aadhar}">
+      <div class="form-grid" style="margin-bottom:1rem">
+        <div class="form-group"><label class="form-label required">First Name</label><input name="cust_first_name" class="form-control" value="{{ bid_buyer.First_name }}" required></div>
+        <div class="form-group"><label class="form-label required">Last Name</label><input name="cust_last_name" class="form-control" value="{{ bid_buyer.last_name }}" required></div>
+        <div class="form-group"><label class="form-label required">Phone (10 digits)</label><input name="cust_phone" class="form-control" value="{{ bid_buyer.Contact_no }}" maxlength="10" required></div>
+        <div class="form-group"><label class="form-label">Alt. Phone</label><input name="cust_alt_phone" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Email</label><input name="cust_email" type="email" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Apartment No.</label><input name="cust_apt" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Street</label><input name="cust_street" class="form-control"></div>
+        <div class="form-group"><label class="form-label">City</label><input name="cust_city" class="form-control"></div>
+        <div class="form-group"><label class="form-label">State</label><input name="cust_state" class="form-control" value="Assam"></div>
+        <div class="form-group"><label class="form-label">Pincode</label><input name="cust_pincode" class="form-control" maxlength="10"></div>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-arrow-right"></i> Continue to Transaction Details</button>
+    </form>`;
+}
+</script>
+{% endblock %}
+{% block content %}
+<div class="card" style="max-width:680px">
+  <div class="card-header"><h3><i class="fas fa-id-card"></i> Step 2 of 3: Verify Buyer</h3></div>
+  <div class="card-body">
+    <div style="padding:.875rem 1rem;background:var(--cream-2);border-radius:10px;border:1px solid var(--border);margin-bottom:1.25rem">
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);font-weight:600;margin-bottom:.3rem">Selected Interested Buyer</div>
+      <strong>{{ bid_buyer.First_name }} {{ bid_buyer.last_name }}</strong> — {{ bid_buyer.Contact_no }}
+      {% if bid_buyer.offer_amount %} &nbsp;·&nbsp; Offer: &#8377;{{ bid_buyer.offer_amount|floatformat:0 }}{% endif %}
+    </div>
+
+    <div style="font-size:.875rem;font-weight:600;color:var(--text-2);margin-bottom:.5rem">Enter Buyer's Aadhar Number to check existing records:</div>
+    <div style="display:flex;gap:.75rem;align-items:flex-start">
+      <div style="flex:1">
+        <input id="aadhar_input" type="text" class="form-control" placeholder="12-digit Aadhar number" maxlength="12" pattern="[0-9]{12}" value="{{ aadhar }}">
+        <span id="aadhar_err" style="color:var(--rust);font-size:.78rem"></span>
+      </div>
+      <button onclick="checkAadhar()" class="btn btn-primary"><i class="fas fa-search"></i> Check</button>
+    </div>
+    <div id="aadhar_result">
+      {% if existing_customer %}
+      <div class="alert alert-info" style="margin-top:.75rem">
+        <i class="fas fa-check-circle"></i>
+        Customer found: <strong>{{ existing_customer.first_name }} {{ existing_customer.last_name }}</strong> ({{ existing_customer.phone }}) — {{ existing_customer.role_type }}
+      </div>
+      <form method="post" action="?step=3">{% csrf_token %}
+        <input type="hidden" name="buyer_id" value="{{ buyer_id }}">
+        <input type="hidden" name="customer_id" value="{{ existing_customer.customer_id }}">
+        <input type="hidden" name="use_existing" value="1">
+        <button type="submit" class="btn btn-primary" style="margin-top:.75rem"><i class="fas fa-arrow-right"></i> Use This Customer → Proceed</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <div style="margin-top:1.25rem">
+      <a href="{% url 'agent_create_transaction' property.property_id %}?step=1" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

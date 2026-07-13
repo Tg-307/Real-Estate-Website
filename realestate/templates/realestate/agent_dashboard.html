@@ -1,0 +1,88 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Agent Dashboard{% endblock %}
+{% block nav_home %}active{% endblock %}
+{% block topbar_title %}Welcome, {{ employee.first_name }}!{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'agent_add_property' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> List Property</a>
+{% endblock %}
+{% block content %}
+{% if error %}<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> No employee record linked. Contact your manager.</div>
+{% else %}
+<div class="stats-grid">
+  <div class="stat-card c1"><div class="stat-icon"><i class="fas fa-home"></i></div><div class="stat-value">{{ prop_stats.total }}</div><div class="stat-label">My Listings</div></div>
+  <div class="stat-card c2"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value">{{ prop_stats.available }}</div><div class="stat-label">Available</div></div>
+  <div class="stat-card c3"><div class="stat-icon"><i class="fas fa-handshake"></i></div><div class="stat-value">{{ prop_stats.sold }}</div><div class="stat-label">Sold</div></div>
+  <div class="stat-card c4"><div class="stat-icon"><i class="fas fa-key"></i></div><div class="stat-value">{{ prop_stats.rented }}</div><div class="stat-label">Rented</div></div>
+  <div class="stat-card c1"><div class="stat-icon"><i class="fas fa-file-invoice-dollar"></i></div><div class="stat-value">{{ txn_count }}</div><div class="stat-label">Deals Closed</div></div>
+  <div class="stat-card c4"><div class="stat-icon"><i class="fas fa-rupee-sign"></i></div><div class="stat-value" style="font-size:1.1rem">&#8377;{{ total_earnings|floatformat:0 }}</div><div class="stat-label">My Earnings</div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-file-invoice-dollar"></i> My Recent Deals</h3><a href="{% url 'agent_analytics' %}" class="btn btn-ghost btn-sm">Full Report</a></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Property</th><th>Price</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for t in my_txns %}
+          <tr>
+            <td style="color:var(--amber);font-weight:600">#{{ t.transaction_id }}</td>
+            <td><div style="font-size:.84rem;font-weight:500">{{ t.property.address.city }}</div><div style="font-size:.75rem;color:var(--text-3)">{{ t.property.type }}</div></td>
+            <td style="font-weight:600">&#8377;{{ t.agreed_price|floatformat:0 }}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">{{ t.closing_date }}</td>
+          </tr>
+          {% empty %}<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:2rem">No deals yet</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-gavel"></i> Recent Bids on My Properties</h3></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Buyer</th><th>Property</th><th>Offer</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for b in bids_raw %}
+          <tr>
+            <td style="font-size:.85rem;font-weight:500">{{ b.First_name }} {{ b.last_name }}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">{{ b.city }}</td>
+            <td style="font-weight:600;color:var(--amber)">{% if b.offer_amount %}&#8377;{{ b.offer_amount|floatformat:0 }}{% else %}—{% endif %}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">{{ b.interest_date }}</td>
+          </tr>
+          {% empty %}<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:2rem">No bids yet</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-home"></i> My Properties</h3>
+    <div style="display:flex;gap:.5rem">
+      <a href="{% url 'agent_add_property' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add</a>
+      <a href="{% url 'property_search' %}" class="btn btn-ghost btn-sm"><i class="fas fa-search"></i> Search</a>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="prop-grid">
+      {% for p in my_props %}
+      <a href="{% url 'property_detail' p.property_id %}" class="prop-card">
+        <div class="prop-img-placeholder" data-type="{{ p.type }}"><span class="prop-type-icon"></span></div>
+        <div class="prop-body">
+          <div class="prop-type-tag">{{ p.type }}{% if p.BHK %} · {{ p.BHK }}BHK{% endif %}</div>
+          <div class="prop-title">{{ p.description|default:"Property"|truncatechars:50 }}</div>
+          <div class="prop-loc"><i class="fas fa-map-marker-alt" style="color:var(--amber);font-size:.7rem"></i> {{ p.address.city }}</div>
+          <div class="prop-price">{% if p.cost_for_sell %}&#8377;{{ p.cost_for_sell|floatformat:0 }}<span style='font-size:.72rem;color:var(--text-3)'> sell</span>{% endif %}{% if p.Cost_for_rent %} &nbsp;&#8377;{{ p.Cost_for_rent|floatformat:0 }}/mo<span style='font-size:.72rem;color:var(--text-3)'> rent</span>{% endif %}</div>
+        </div>
+        <div class="prop-footer">
+          {% if p.availability == 'Available' %}<span class="badge b-available">Available</span>{% elif p.availability == 'Sold' %}<span class="badge b-sold">Sold</span>{% elif p.availability == 'Rented' %}<span class="badge b-rented">Rented</span>{% else %}<span class="badge b-na">{{ p.availability }}</span>{% endif %}
+          <span style="font-size:.75rem;color:var(--text-3)">{{ p.area|floatformat:0 }} sqft</span>
+        </div>
+      </a>
+      {% empty %}<p style="color:var(--text-3)">No properties assigned yet. <a href="{% url 'agent_add_property' %}" style="color:var(--amber)">Add your first listing →</a></p>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

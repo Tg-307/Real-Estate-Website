@@ -1,0 +1,157 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Property #{{ property.property_id }}{% endblock %}
+{% block topbar_title %}Property #{{ property.property_id }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'property_search' %}" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+  {% if is_own_property and property.availability == 'Available' %}
+    <a href="{% url 'update_property' property.property_id %}" class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i> Edit</a>
+    <a href="{% url 'agent_add_bid' property.property_id %}" class="btn btn-outline btn-sm"><i class="fas fa-gavel"></i> Add Bid</a>
+    <a href="{% url 'agent_create_transaction' property.property_id %}?step=1" class="btn btn-success btn-sm"><i class="fas fa-file-signature"></i> Create Transaction</a>
+  {% elif is_own_property and not already_closed %}
+    <a href="{% url 'update_property' property.property_id %}" class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i> Edit</a>
+  {% elif is_own_property and already_closed %}
+    <a href="{% url 'agent_add_bid' property.property_id %}" class="btn btn-outline btn-sm"><i class="fas fa-gavel"></i> Add Bid</a>
+  {% endif %}
+{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start">
+<div>
+  <!-- Image -->
+  <div class="card" style="margin-bottom:1.25rem;overflow:hidden"><div class="prop-img-placeholder prop-img-large" data-type="{{ property.type }}"><span class="prop-type-icon"></span></div>
+</div>
+
+  <!-- Main info -->
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-body">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem">
+        <div>
+          <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);font-weight:600;margin-bottom:.35rem">{{ property.type|capfirst }}{% if property.BHK %} · {{ property.BHK }} BHK{% endif %} · {{ property.area|floatformat:0 }} sq ft · Built {{ property.Year_of_construction }}</div>
+          <h1 style="font-family:'Times New Roman',serif;font-size:1.7rem;font-weight:700;color:var(--bark);line-height:1.25">{{ property.description|default:"Property Listing" }}</h1>
+          <div style="display:flex;align-items:center;gap:.4rem;color:var(--text-3);font-size:.875rem;margin-top:.4rem"><i class="fas fa-map-marker-alt" style="color:var(--amber)"></i>{{ property.address.street_name }}, {% if property.address.locality %}{{ property.address.locality }}, {% endif %}{{ property.address.city }} — {{ property.address.pincode }}</div>
+        </div>
+        <div>{% if property.availability == 'Available' %}<span class="badge b-available" style="font-size:.82rem;padding:.3rem .8rem">Available</span>{% elif property.availability == 'Sold' %}<span class="badge b-sold" style="font-size:.82rem;padding:.3rem .8rem">Sold</span>{% elif property.availability == 'Rented' %}<span class="badge b-rented" style="font-size:.82rem;padding:.3rem .8rem">Rented</span>{% else %}<span class="badge b-na" style="font-size:.82rem;padding:.3rem .8rem">Not Available</span>{% endif %}</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.875rem;padding:1rem;background:var(--cream-2);border-radius:10px;border:1px solid var(--border)">
+        {% if property.cost_for_sell %}<div style="text-align:center"><div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:.2rem">Sell Price</div><div style="font-family:'Times New Roman',serif;font-size:1.2rem;font-weight:700;color:var(--amber)">&#8377;{{ property.cost_for_sell|floatformat:0 }}</div></div>{% endif %}
+        {% if property.Cost_for_rent %}<div style="text-align:center"><div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:.2rem">Rent/Month</div><div style="font-family:'Times New Roman',serif;font-size:1.2rem;font-weight:700;color:var(--gold)">&#8377;{{ property.Cost_for_rent|floatformat:0 }}</div></div>{% endif %}
+        <div style="text-align:center"><div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:.2rem">Area</div><div style="font-family:'Times New Roman',serif;font-size:1.2rem;font-weight:700;color:var(--bark)">{{ property.area|floatformat:0 }} sqft</div></div>
+        {% if property.CARPET_area %}<div style="text-align:center"><div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:.2rem">Carpet</div><div style="font-family:'Times New Roman',serif;font-size:1.2rem;font-weight:700;color:var(--bark)">{{ property.CARPET_area|floatformat:0 }} sqft</div></div>{% endif %}
+        <div style="text-align:center"><div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:.2rem">Seller Comm.</div><div style="font-family:'Times New Roman',serif;font-size:1.2rem;font-weight:700;color:var(--bark)">{% widthratio property.seller_commission_rate 1 100 %}%</div></div>
+      </div>
+
+      <!-- Seller info -->
+      <div style="margin-top:1.25rem;padding:1rem;background:rgba(200,105,14,.04);border:1px solid var(--border);border-radius:10px">
+        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);font-weight:600;margin-bottom:.6rem">Seller Details</div>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;font-size:.875rem">
+          <div><strong>{{ property.seller.first_name }} {{ property.seller.last_name }}</strong></div>
+          <div><i class="fas fa-phone" style="color:var(--amber)"></i> {{ property.seller.phone }}</div>
+          {% if property.seller.email %}<div><i class="fas fa-envelope" style="color:var(--amber)"></i> {{ property.seller.email }}</div>{% endif %}
+          <div><span class="badge {% if property.seller.role_type == 'seller' %}b-sold{% elif property.seller.role_type == 'both' %}b-manager{% else %}b-agent{% endif %}">{{ property.seller.role_type }}</span></div>
+        </div>
+      </div>
+
+      <!-- Update availability (only if not sold/rented, only own property) -->
+      {% if is_own_property and not already_closed %}
+      <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+        <div style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:.6rem">Update Availability</div>
+        <form method="post" action="{% url 'agent_update_availability' property.property_id %}" style="display:flex;gap:.6rem;flex-wrap:wrap">
+          {% csrf_token %}
+          <select name="availability" class="form-control form-select" style="width:auto;flex:1;min-width:180px">
+            <option value="Available" {% if property.availability == 'Available' %}selected{% endif %}>Available</option>
+            <option value="Not Available" {% if property.availability == 'Not Available' %}selected{% endif %}>Not Available</option>
+          </select>
+          <button type="submit" class="btn btn-primary btn-sm">Update</button>
+        </form>
+        <div style="font-size:.75rem;color:var(--text-3);margin-top:.4rem"><i class="fas fa-info-circle"></i> Use "Create Transaction" to mark as Sold/Rented.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Bids (always visible if any) -->
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-header">
+      <h3><i class="fas fa-gavel"></i> Interested Buyers / Bids ({{ bids|length }})</h3>
+      {% if is_own_property %}
+        <a href="{% url 'agent_add_bid' property.property_id %}" class="btn btn-outline btn-sm">+ Add Bid</a>
+      {% endif %}
+    </div>
+    {% if bids %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Buyer</th><th>Contact</th><th>Offer</th><th>Comm.%</th><th>Date</th><th>Notes</th></tr></thead>
+        <tbody>
+          {% for b in bids %}
+          <tr>
+            <td style="font-weight:500">{{ b.First_name }} {{ b.last_name }}</td>
+            <td style="font-size:.82rem;color:var(--text-3)">{{ b.Contact_no }}</td>
+            <td style="font-weight:600;color:var(--amber)">{% if b.offer_amount %}&#8377;{{ b.offer_amount|floatformat:0 }}{% else %}—{% endif %}</td>
+            <td style="font-size:.82rem">{% widthratio b.buyer_commission_rate 1 100 %}%</td>
+            <td style="font-size:.78rem;color:var(--text-3)">{{ b.interest_date }}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">{{ b.notes|default:"—"|truncatechars:35 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card-body" style="color:var(--text-3);text-align:center;padding:1.5rem">No bids registered yet.</div>
+    {% endif %}
+  </div>
+
+  <!-- Transactions -->
+  {% if transactions %}
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-file-invoice-dollar"></i> Transaction History</h3></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Buyer</th><th>Price</th><th>Buyer Comm.</th><th>Seller Comm.</th><th>Agent</th><th>Closed</th></tr></thead>
+        <tbody>
+          {% for t in transactions %}
+          <tr>
+            <td><a href="{% url 'transaction_detail' t.transaction_id %}" style="color:var(--amber);font-weight:600">#{{ t.transaction_id }}</a></td>
+            <td>{{ t.buyer.first_name }} {{ t.buyer.last_name }}</td>
+            <td style="font-weight:700">&#8377;{{ t.agreed_price|floatformat:0 }}</td>
+            <td style="color:var(--rust-lt);font-size:.85rem">&#8377;{{ t.get_buyer_commission|floatformat:0 }}</td>
+            <td style="color:var(--rust-lt);font-size:.85rem">&#8377;{{ t.get_seller_commission|floatformat:0 }}</td>
+            <td style="font-size:.82rem">{{ t.agent.first_name }} {{ t.agent.last_name }}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">{{ t.closing_date }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Right sidebar -->
+<div style="position:sticky;top:5rem;display:flex;flex-direction:column;gap:1rem">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-user-tie"></i> Assigned Agent</h3></div>
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--rust-lt));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem;flex-shrink:0">{{ property.agent.first_name|first }}{{ property.agent.last_name|first }}</div>
+        <div><div style="font-weight:600;font-size:.925rem">{{ property.agent.first_name }} {{ property.agent.last_name }}</div><div style="font-size:.78rem;color:var(--text-3)">{{ property.agent.branch.branch_name }}</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.845rem">
+        <div><i class="fas fa-phone" style="color:var(--amber);width:16px"></i> {{ property.agent.phone }}</div>
+        <div style="word-break:break-all"><i class="fas fa-envelope" style="color:var(--amber);width:16px"></i> {{ property.agent.email }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-map-marker-alt"></i> Address</h3></div>
+    <div class="card-body" style="font-size:.855rem;line-height:2;color:var(--text-3)">
+      {% if property.address.Apartment_no %}Apt {{ property.address.Apartment_no }}, {% endif %}
+      {% if property.address.building %}{{ property.address.building }}, {% endif %}
+      {% if property.address.street_number %}{{ property.address.street_number }}, {% endif %}{{ property.address.street_name }},<br>
+      {% if property.address.locality %}{{ property.address.locality }},<br>{% endif %}
+      {{ property.address.city }}, {{ property.address.state }} — {{ property.address.pincode }}<br>
+      {{ property.address.country }}
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

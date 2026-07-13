@@ -1,0 +1,128 @@
+{% extends 'realestate/base.html' %}
+{% block title %}List Property{% endblock %}
+{% block nav_addprop %}active{% endblock %}
+{% block topbar_title %}List a New Property{% endblock %}
+
+{% block extra_js %}
+<script>
+function lookupSeller() {
+  const a = document.getElementById('seller_aadhar').value.trim();
+  const errEl = document.getElementById('aadhar_err');
+  if (!/^\d{12}$/.test(a)) {
+    errEl.textContent = 'Aadhar must be exactly 12 digits.';
+    return;
+  }
+  errEl.textContent = '';
+  fetch('/ajax/seller-lookup/?aadhar=' + a)
+    .then(r => r.json())
+    .then(d => {
+      const res = document.getElementById('seller_result');
+      const newForm = document.getElementById('new_seller_form');
+      if (d.found) {
+        res.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Found: <strong>' + d.name + '</strong> (' + d.phone + '). Selected as seller.</div>';
+        // Auto-select in dropdown
+        const sel = document.getElementById('seller_select');
+        for (let i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value == d.customer_id) { sel.selectedIndex = i; break; }
+        }
+        newForm.style.display = 'none';
+      } else {
+        res.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> No seller found with Aadhar <strong>' + a + '</strong>. Fill in details below to register them.</div>';
+        document.getElementById('new_seller_aadhar').value = a;
+        newForm.style.display = 'block';
+      }
+    });
+}
+function useNewSeller() {
+  // When creating a new seller inline, we set a flag so the view handles it
+  document.getElementById('seller_select').value = '';
+  document.getElementById('use_new_seller').value = '1';
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:900px">
+  <div class="card-header"><h3><i class="fas fa-home"></i> Property Details</h3></div>
+  <div class="card-body">
+    <form method="post" id="prop_form">{% csrf_token %}
+      <input type="hidden" name="use_new_seller" id="use_new_seller" value="0">
+
+      <!-- Seller lookup -->
+      <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);font-weight:600;margin-bottom:.75rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)">Step 1 — Find or Register Seller</div>
+      <div class="form-grid" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Lookup by Aadhar</label>
+          <div style="display:flex;gap:.6rem">
+            <input type="text" id="seller_aadhar" class="form-control" placeholder="12-digit Aadhar" maxlength="12" pattern="[0-9]{12}">
+            <button type="button" onclick="lookupSeller()" class="btn btn-outline btn-sm" style="white-space:nowrap">Check</button>
+          </div>
+          <span id="aadhar_err" style="color:var(--rust);font-size:.78rem"></span>
+          <div id="seller_result" style="margin-top:.5rem"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">Seller (Customer)</label>
+          <select name="seller_id" class="form-control form-select" id="seller_select">
+            <option value="">-- Select existing seller --</option>
+            {% for c in customers %}
+            <option value="{{ c.customer_id }}">{{ c.first_name }} {{ c.last_name }} ({{ c.phone }})</option>
+            {% endfor %}
+          </select>
+          <span class="form-hint">Use Aadhar lookup above to find them, or select manually.</span>
+        </div>
+      </div>
+
+      <!-- New seller inline form (hidden by default) -->
+      <div id="new_seller_form" style="display:none;background:var(--cream-2);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1.25rem">
+        <div style="font-size:.8rem;font-weight:600;color:var(--bark);margin-bottom:.75rem"><i class="fas fa-user-plus" style="color:var(--amber)"></i> Register New Seller</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">First Name</label><input type="text" name="new_seller_first_name" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Last Name</label><input type="text" name="new_seller_last_name" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Phone (10 digits)</label><input type="text" name="new_seller_phone" class="form-control" maxlength="10"></div>
+          <div class="form-group"><label class="form-label">Alternate Phone</label><input type="text" name="new_seller_alt_phone" class="form-control" maxlength="10"></div>
+          <div class="form-group"><label class="form-label">Email</label><input type="email" name="new_seller_email" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Aadhar (12 digits)</label><input type="text" name="new_seller_aadhar" id="new_seller_aadhar" class="form-control" maxlength="12" readonly></div>
+          <div class="form-group"><label class="form-label">Street</label><input type="text" name="new_seller_street" class="form-control"></div>
+          <div class="form-group"><label class="form-label">City</label><input type="text" name="new_seller_city" class="form-control"></div>
+          <div class="form-group"><label class="form-label">State</label><input type="text" name="new_seller_state" class="form-control" value="Assam"></div>
+          <div class="form-group"><label class="form-label">Pincode</label><input type="text" name="new_seller_pincode" class="form-control" maxlength="10"></div>
+        </div>
+        <button type="button" onclick="useNewSeller()" class="btn btn-primary btn-sm" style="margin-top:.5rem"><i class="fas fa-check"></i> Use This Seller</button>
+      </div>
+
+      <!-- Property info -->
+      <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);font-weight:600;margin-bottom:.75rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)">Step 2 — Property Info</div>
+      <div class="alert alert-info" style="margin-bottom:.75rem;font-size:.8rem"><i class="fas fa-info-circle"></i> At least one of Sell Price or Rent/Month is required. Year of construction is mandatory.</div>
+      <div class="form-grid" style="margin-bottom:1.25rem">
+        <div class="form-group"><label class="form-label required">Type</label><select name="type" class="form-control form-select" required><option value="">-- Select --</option><option value="residential">Residential</option><option value="commercial">Commercial</option><option value="land">Land</option><option value="industrial">Industrial</option></select></div>
+        <div class="form-group"><label class="form-label">BHK</label><input type="number" name="bhk" class="form-control" placeholder="e.g. 3" min="1" max="10"></div>
+        <div class="form-group"><label class="form-label required">Area (sq ft)</label><input type="number" name="area" class="form-control" placeholder="e.g. 1450" step="0.01" required></div>
+        <div class="form-group"><label class="form-label">Carpet Area (sq ft)</label><input type="number" name="carpet_area" class="form-control" placeholder="e.g. 1200" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Sell Price &#8377;</label><input type="number" name="cost_for_sell" class="form-control" placeholder="e.g. 4500000" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Rent/Month &#8377;</label><input type="number" name="cost_for_rent" class="form-control" placeholder="e.g. 18000" step="0.01"></div>
+        <div class="form-group"><label class="form-label required">Year of Construction</label><input type="number" name="year_construction" class="form-control" placeholder="e.g. 2020" min="1900" max="2025" required></div>
+        <div class="form-group"><label class="form-label">Seller Commission Rate</label><input type="number" name="seller_commission_rate" class="form-control" value="0.030" step="0.001" min="0" max="0.2"><span class="form-hint">e.g. 0.030 = 3%</span></div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:1.25rem"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3" placeholder="Brief description of the property..."></textarea></div>
+
+      <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);font-weight:600;margin-bottom:.75rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)">Step 3 — Address</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Apartment No.</label><input type="text" name="apartment_no" class="form-control" placeholder="e.g. 3A"></div>
+        <div class="form-group"><label class="form-label">Building</label><input type="text" name="building" class="form-control" placeholder="e.g. Sunrise Tower"></div>
+        <div class="form-group"><label class="form-label">Street Number</label><input type="text" name="street_number" class="form-control" placeholder="e.g. 12"></div>
+        <div class="form-group"><label class="form-label required">Street Name</label><input type="text" name="street_name" class="form-control" placeholder="e.g. GS Road" required></div>
+        <div class="form-group"><label class="form-label">Locality</label><input type="text" name="locality" class="form-control" placeholder="e.g. Bharalumukh"></div>
+        <div class="form-group"><label class="form-label required">City</label><input type="text" name="city" class="form-control" placeholder="e.g. Guwahati" required></div>
+        <div class="form-group"><label class="form-label required">State</label><input type="text" name="state" class="form-control" value="Assam" required></div>
+        <div class="form-group"><label class="form-label required">Pincode</label><input type="text" name="pincode" class="form-control" placeholder="e.g. 781005" required maxlength="10"></div>
+      </div>
+
+      <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus-circle"></i> List Property</button>
+        <a href="{% url 'agent_dashboard' %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

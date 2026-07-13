@@ -1,0 +1,74 @@
+{% extends 'realestate/base.html' %}
+{% block title %}My Performance{% endblock %}
+{% block nav_mystats %}active{% endblock %}
+{% block topbar_title %}My Performance — {{ employee.first_name }} {{ employee.last_name }}{% endblock %}
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card c1"><div class="stat-icon"><i class="fas fa-handshake"></i></div><div class="stat-value">{{ deal_count }}</div><div class="stat-label">Total Deals</div></div>
+  <div class="stat-card c4"><div class="stat-icon"><i class="fas fa-rupee-sign"></i></div><div class="stat-value" style="font-size:1.1rem">&#8377;{{ total_value|floatformat:0 }}</div><div class="stat-label">Total Sales Value</div></div>
+  <div class="stat-card c3"><div class="stat-icon"><i class="fas fa-piggy-bank"></i></div><div class="stat-value" style="font-size:1.1rem">&#8377;{{ total_earnings|floatformat:0 }}</div><div class="stat-label">My Earnings</div></div>
+  <div class="stat-card c2"><div class="stat-icon"><i class="fas fa-percentage"></i></div><div class="stat-value">{{ employee.commission }}</div><div class="stat-label">Comm. Rate</div></div>
+  <div class="stat-card c1"><div class="stat-icon"><i class="fas fa-home"></i></div><div class="stat-value">{{ props.count }}</div><div class="stat-label">Properties</div></div>
+</div>
+
+{% if yearly %}
+<div class="card" style="margin-bottom:1.25rem">
+  <div class="card-header"><h3><i class="fas fa-calendar-alt"></i> Year-wise Breakdown</h3></div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem">
+      {% for y in yearly %}
+      <div style="background:var(--cream-2);border:1px solid var(--border);border-radius:10px;padding:.875rem;text-align:center">
+        <div style="font-family:'Times New Roman',serif;font-size:1.5rem;font-weight:700;color:var(--amber)">{{ y.yr }}</div>
+        <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin:.3rem 0 .1rem">Deals</div>
+        <div style="font-family:'Times New Roman',serif;font-size:1.3rem;font-weight:700;color:var(--bark)">{{ y.count }}</div>
+        <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin:.3rem 0 .1rem">Value</div>
+        <div style="font-size:.82rem;font-weight:600">&#8377;{{ y.total|floatformat:0 }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-file-invoice-dollar"></i> Recent Transactions</h3></div>
+    <div class="table-wrap" style="max-height:380px;overflow-y:auto">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Property</th><th>Price</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+          {% for t in txns %}
+          <tr>
+            <td style="color:var(--amber);font-weight:600">#{{ t.transaction_id }}</td>
+            <td><div style="font-size:.84rem;font-weight:500">{{ t.property.address.city }}</div><div style="font-size:.75rem;color:var(--text-3)">{{ t.property.type }}</div></td>
+            <td style="font-weight:700">&#8377;{{ t.agreed_price|floatformat:0 }}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">{{ t.closing_date }}</td>
+            <td><a href="{% url 'transaction_detail' t.transaction_id %}" class="btn btn-ghost btn-sm">More</a></td>
+          </tr>
+          {% empty %}<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:2rem">No transactions yet</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-home"></i> My Properties</h3></div>
+    <div style="max-height:380px;overflow-y:auto">
+      {% for p in props %}
+      <a href="{% url 'property_detail' p.property_id %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem 1rem;border-bottom:1px solid var(--border);text-decoration:none;transition:.15s" onmouseover="this.style.background='rgba(200,105,14,.04)'" onmouseout="this.style.background=''">
+        <div style="width:32px;height:32px;border-radius:8px;background:var(--cream-3);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">{% if p.type == 'commercial' %}🏢{% elif p.type == 'land' %}🌿{% else %}🏠{% endif %}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.85rem;font-weight:500;color:var(--bark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.description|default:"Property"|truncatechars:38 }}</div>
+          <div style="font-size:.75rem;color:var(--text-3)">{{ p.address.city }} · {{ p.area|floatformat:0 }} sqft</div>
+        </div>
+        <div>
+          {% if p.availability == 'Available' %}<span class="badge b-available" style="font-size:.68rem">Available</span>
+          {% elif p.availability == 'Sold' %}<span class="badge b-sold" style="font-size:.68rem">Sold</span>
+          {% elif p.availability == 'Rented' %}<span class="badge b-rented" style="font-size:.68rem">Rented</span>
+          {% else %}<span class="badge b-na" style="font-size:.68rem">N/A</span>{% endif %}
+        </div>
+      </a>
+      {% empty %}<div style="text-align:center;padding:2rem;color:var(--text-3)">No properties</div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

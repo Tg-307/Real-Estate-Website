@@ -1,0 +1,7 @@
+Django>=4.2,<5.0
+djangorestframework>=3.14
+djangorestframework-simplejwt>=5.3
+django-jazzmin>=2.6
+mysqlclient>=2.2
+django-cors-headers>=4.3
+Pillow>=10.0

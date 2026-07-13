@@ -1,0 +1,28 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Agent Analysis{% endblock %}
+{% block nav_agentanalysis %}active{% endblock %}
+{% block topbar_title %}Agent Analysis{% endblock %}
+{% block content %}
+<div class="prop-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+  {% for a in agents %}
+  <a href="{% url 'manager_agent_analysis' %}?agent_id={{ a.employee_id }}" class="prop-card">
+    <div class="prop-body" style="padding:1.25rem">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem">
+        <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--rust-lt));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem;flex-shrink:0">{{ a.first_name|first }}{{ a.last_name|first }}</div>
+        <div>
+          <div style="font-weight:600;font-size:.9rem;color:var(--bark)">{{ a.first_name }} {{ a.last_name }}</div>
+          <div style="font-size:.75rem;color:var(--text-3)">{{ a.phone }}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="badge {% if a.Status %}b-available{% else %}b-na{% endif %}">{% if a.Status %}Active{% else %}Inactive{% endif %}</span>
+        <span style="font-family:'Times New Roman',serif;font-size:1.2rem;font-weight:700;color:var(--amber)">{{ a.deals }} deals</span>
+      </div>
+    </div>
+    <div class="prop-footer"><span style="font-size:.75rem;color:var(--text-3)">{{ a.email }}</span><span style="color:var(--amber);font-size:.8rem">View →</span></div>
+  </a>
+  {% empty %}
+  <p style="color:var(--text-3)">No agents in your branch.</p>
+  {% endfor %}
+</div>
+{% endblock %}

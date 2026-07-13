@@ -1,0 +1,54 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Transaction — Step 3{% endblock %}
+{% block topbar_title %}Transaction — Enter Details{% endblock %}
+{% block extra_js %}
+<script>document.addEventListener("DOMContentLoaded",function(){var el=document.getElementById("closing_date_input");if(el){var d=new Date();var s=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");el.setAttribute("max",s);}});</script>
+{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 280px;gap:1.25rem;align-items:start">
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-file-signature"></i> Step 3 of 3: Transaction Details</h3></div>
+  <div class="card-body">
+    <form method="post" action="?step=commit">{% csrf_token %}
+      <!-- Pass forward all customer data -->
+      <input type="hidden" name="buyer_id" value="{{ buyer_id }}">
+      <input type="hidden" name="customer_id" value="{{ customer_id }}">
+      <input type="hidden" name="use_existing" value="{{ use_existing|yesno:'1,0' }}">
+      {% for k, v in form_data.items %}
+        {% if k != 'csrfmiddlewaretoken' and k != 'buyer_id' and k != 'customer_id' and k != 'use_existing' %}
+        <input type="hidden" name="{{ k }}" value="{{ v }}">
+        {% endif %}
+      {% endfor %}
+
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label required">Agreed Price &#8377;</label><input type="number" name="agreed_price" class="form-control" placeholder="e.g. 4500000" step="0.01" required{% if bid_buyer.offer_amount %} value="{{ bid_buyer.offer_amount|floatformat:0 }}"{% endif %}></div>
+        <div class="form-group"><label class="form-label required">Closing Date</label><input type="date" name="closing_date" class="form-control" required id="closing_date_input"><span class="form-hint">Must be today or earlier (and after listing date).</span></div>
+        <div class="form-group"><label class="form-label required">Buyer Commission Rate</label><input type="number" name="buyer_commission_rate" class="form-control" value="{{ bid_buyer.buyer_commission_rate|default:'0.005' }}" step="0.001" min="0" max="0.2" required><span class="form-hint">e.g. 0.005 = 0.5%</span></div>
+        <div class="form-group"><label class="form-label required">Seller Commission Rate</label><input type="number" name="seller_commission_rate" class="form-control" value="{{ property.seller_commission_rate }}" step="0.001" min="0" max="0.2" required></div>
+        <div class="form-group"><label class="form-label required">Mark Property As</label><select name="new_status" class="form-control form-select" required><option value="Sold">Sold</option><option value="Rented">Rented</option></select></div>
+      </div>
+      <div class="form-group" style="margin-top:1rem"><label class="form-label">Comments</label><textarea name="comments" class="form-control" rows="2" placeholder="Any notes..."></textarea></div>
+
+      <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Complete Transaction</button>
+        <a href="{% url 'agent_create_transaction' property.property_id %}?step=1" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-info-circle"></i> Summary</h3></div>
+  <div class="card-body" style="font-size:.875rem;display:flex;flex-direction:column;gap:.5rem">
+    <div><strong>Property:</strong> {{ property.description|default:"Property"|truncatechars:40 }}</div>
+    <div><strong>Location:</strong> {{ property.address.street_name }}, {{ property.address.city }}</div>
+    {% if property.cost_for_sell %}<div><strong>Listed at:</strong> <span style="color:var(--amber)">&#8377;{{ property.cost_for_sell|floatformat:0 }}</span></div>{% endif %}
+    {% if property.Cost_for_rent %}<div><strong>Rent:</strong> <span style="color:var(--gold)">&#8377;{{ property.Cost_for_rent|floatformat:0 }}/mo</span></div>{% endif %}
+    <div style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem"><strong>Buyer:</strong> {{ bid_buyer.First_name }} {{ bid_buyer.last_name }}</div>
+    {% if use_existing %}<div style="font-size:.78rem;color:var(--sage)"><i class="fas fa-check-circle"></i> Existing customer record</div>{% else %}<div style="font-size:.78rem;color:var(--amber)"><i class="fas fa-user-plus"></i> New customer will be created</div>{% endif %}
+    <div style="background:var(--cream-2);border-radius:8px;padding:.75rem;margin-top:.5rem;font-size:.78rem;color:var(--text-3)">
+      <i class="fas fa-exclamation-circle" style="color:var(--amber)"></i> On completion: property will be marked Sold/Rented, all bids removed, potential buyer record deleted.
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Create Transaction — Step 1{% endblock %}
+{% block topbar_title %}Transaction — Select Interested Buyer{% endblock %}
+{% block content %}
+<div class="card" style="max-width:760px">
+  <div class="card-header">
+    <h3><i class="fas fa-gavel"></i> Step 1 of 3: Select an Interested Buyer</h3>
+    <span style="font-size:.78rem;color:var(--text-3)">Property #{{ property.property_id }} · {{ property.address.city }}</span>
+  </div>
+  <div class="card-body">
+    {% if bids %}
+    <p style="font-size:.875rem;color:var(--text-2);margin-bottom:1rem">Select the buyer who is proceeding to purchase/rent this property:</p>
+    <div style="display:flex;flex-direction:column;gap:.6rem">
+      {% for b in bids %}
+      <a href="{% url 'agent_create_transaction' property.property_id %}?step=2&buyer_id={{ b.buyer_id }}"
+         style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;border:1.5px solid var(--border);border-radius:10px;text-decoration:none;color:inherit;transition:.2s"
+         onmouseover="this.style.borderColor='var(--amber)';this.style.background='rgba(200,105,14,.04)'"
+         onmouseout="this.style.borderColor='var(--border)';this.style.background=''">
+        <div>
+          <div style="font-weight:600;font-size:.95rem">{{ b.First_name }} {{ b.last_name }}</div>
+          <div style="font-size:.8rem;color:var(--text-3)"><i class="fas fa-phone" style="color:var(--amber)"></i> {{ b.Contact_no }} &nbsp;|&nbsp; Registered: {{ b.interest_date }}</div>
+        </div>
+        <div style="text-align:right">
+          {% if b.offer_amount %}<div style="font-family:'Times New Roman',serif;font-size:1.15rem;font-weight:700;color:var(--amber)">&#8377;{{ b.offer_amount|floatformat:0 }}</div><div style="font-size:.72rem;color:var(--text-3)">Offer Amount</div>{% else %}<div style="color:var(--text-3);font-size:.82rem">No offer amount</div>{% endif %}
+          <i class="fas fa-arrow-right" style="color:var(--amber);margin-top:.4rem;display:block"></i>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:2rem">
+      <div style="font-size:2.5rem;margin-bottom:.6rem">🍂</div>
+      <div style="font-family:'Times New Roman',serif;font-size:1.2rem;color:var(--bark);margin-bottom:.4rem">No interested buyers yet</div>
+      <p style="font-size:.875rem;color:var(--text-3);margin-bottom:1rem">Add an interested buyer before creating a transaction.</p>
+    </div>
+    {% endif %}
+    <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);display:flex;gap:.75rem;flex-wrap:wrap">
+      <a href="{% url 'agent_add_bid' property.property_id %}" class="btn btn-outline btn-sm"><i class="fas fa-plus"></i> Add Interested Buyer</a>
+      <a href="{% url 'property_detail' property.property_id %}" class="btn btn-ghost btn-sm">Cancel</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

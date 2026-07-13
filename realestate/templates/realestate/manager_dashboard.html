@@ -1,0 +1,119 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Manager Dashboard{% endblock %}
+{% block nav_home %}active{% endblock %}
+{% block topbar_title %}{% if branch %}{{ branch.branch_name }}{% else %}Branch{% endif %} — Manager Dashboard{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'manager_add_agent' %}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> Add Agent</a>
+{% endblock %}
+{% block content %}
+{% if error %}<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> No employee record linked. Contact admin.</div>
+{% else %}
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card c1"><div class="stat-icon"><i class="fas fa-user-tie"></i></div><div class="stat-value">{{ all_agents.count }}</div><div class="stat-label">Agents</div></div>
+  <div class="stat-card c2"><div class="stat-icon"><i class="fas fa-home"></i></div><div class="stat-value">{{ prop_stats.total }}</div><div class="stat-label">Properties</div></div>
+  <div class="stat-card c3"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value">{{ prop_stats.available }}</div><div class="stat-label">Available</div></div>
+  <div class="stat-card c4"><div class="stat-icon"><i class="fas fa-handshake"></i></div><div class="stat-value">{{ prop_stats.sold }}</div><div class="stat-label">Sold</div></div>
+  <div class="stat-card c1"><div class="stat-icon"><i class="fas fa-key"></i></div><div class="stat-value">{{ prop_stats.rented }}</div><div class="stat-label">Rented</div></div>
+  <div class="stat-card c4"><div class="stat-icon"><i class="fas fa-rupee-sign"></i></div><div class="stat-value" style="font-size:1.1rem">&#8377;{{ txn_stats.total_value|floatformat:0|default:"0" }}</div><div class="stat-label">Branch Revenue</div></div>
+</div>
+
+<!-- Agents table -->
+<div class="card" style="margin-bottom:1.25rem">
+  <div class="card-header">
+    <h3><i class="fas fa-user-tie"></i> Branch Agents</h3>
+    <div style="display:flex;gap:.5rem">
+      <a href="{% url 'manager_agent_analysis' %}" class="btn btn-ghost btn-sm"><i class="fas fa-chart-pie"></i> Analysis</a>
+      <a href="{% url 'manager_add_agent' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Agent</a>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Agent</th><th>Email</th><th>Deals</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for a in all_agents %}
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--rust-lt));display:flex;align-items:center;justify-content:center;color:#fff;font-size:.72rem;font-weight:700;flex-shrink:0">{{ a.first_name|first }}{{ a.last_name|first }}</div>
+              <div>
+                <div style="font-weight:500;font-size:.875rem">{{ a.first_name }} {{ a.last_name }}</div>
+                <div style="font-size:.75rem;color:var(--text-3)">{{ a.phone }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:.82rem;color:var(--text-3)">{{ a.email }}</td>
+          <td><a href="{% url 'manager_agent_analysis' %}?agent_id={{ a.employee_id }}" style="color:var(--amber);font-weight:700;text-decoration:none">{{ a.deals }}</a></td>
+          <td><span class="badge {% if a.Status %}b-available{% else %}b-na{% endif %}">{% if a.Status %}Active{% else %}Inactive{% endif %}</span></td>
+          <td style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <a href="{% url 'manager_agent_analysis' %}?agent_id={{ a.employee_id }}" class="btn btn-ghost btn-sm"><i class="fas fa-chart-bar"></i></a>
+            {% if a.Status %}
+            <a href="{% url 'manager_deactivate_agent' a.employee_id %}" class="btn btn-danger btn-sm"><i class="fas fa-user-slash"></i> Deactivate</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:2rem">No agents in branch</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Property filters -->
+<div class="card" style="margin-bottom:1.25rem">
+  <div class="card-header"><h3><i class="fas fa-filter"></i> Filter Properties</h3><a href="{% url 'manager_dashboard' %}" class="btn btn-ghost btn-sm">Clear</a></div>
+  <div class="card-body">
+    <form method="get">
+      <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+        <div class="form-group"><label class="form-label">Agent Name</label><input type="text" name="agent_name" class="form-control" placeholder="First or last name" value="{{ filters.agent_name }}"></div>
+        <div class="form-group"><label class="form-label">Listed From</label><input type="date" name="listing_from" class="form-control" value="{{ filters.listing_from }}"></div>
+        <div class="form-group"><label class="form-label">Listed To</label><input type="date" name="listing_to" class="form-control" value="{{ filters.listing_to }}"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select name="avail" class="form-control form-select">
+            <option value="">All</option>
+            <option value="Available" {% if filters.avail == "Available" %}selected{% endif %}>Available</option>
+            <option value="Sold" {% if filters.avail == "Sold" %}selected{% endif %}>Sold</option>
+            <option value="Rented" {% if filters.avail == "Rented" %}selected{% endif %}>Rented</option>
+            <option value="Not Available" {% if filters.avail == "Not Available" %}selected{% endif %}>Not Available</option>
+          </select>
+        </div>
+        <div class="form-group" style="padding-top:1.35rem"><button type="submit" class="btn btn-primary" style="width:100%"><i class="fas fa-search"></i> Apply</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Properties grid -->
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-home"></i> Branch Properties ({{ props|length }} shown)</h3>
+    <a href="{% url 'property_search' %}" class="btn btn-ghost btn-sm"><i class="fas fa-search"></i> Full Search</a>
+  </div>
+  <div class="card-body">
+    <div class="prop-grid">
+      {% for p in props %}
+      <a href="{% url 'property_detail' p.property_id %}" class="prop-card">
+        <div class="prop-img-placeholder" data-type="{{ p.type }}"><span class="prop-type-icon"></span></div>
+        <div class="prop-body">
+          <div class="prop-type-tag">{{ p.type }}{% if p.BHK %} · {{ p.BHK }}BHK{% endif %}</div>
+          <div class="prop-title">{{ p.description|default:"Property"|truncatechars:50 }}</div>
+          <div class="prop-loc"><i class="fas fa-map-marker-alt" style="color:var(--amber);font-size:.7rem"></i> {{ p.address.city }}</div>
+          <div class="prop-loc" style="font-size:.75rem;color:var(--text-3)"><i class="fas fa-user-tie" style="color:var(--amber);font-size:.7rem"></i> {{ p.agent.first_name }} {{ p.agent.last_name }}</div>
+          <div class="prop-price">
+            {% if p.cost_for_sell %}&#8377;{{ p.cost_for_sell|floatformat:0 }}<span style="font-size:.72rem;color:var(--text-3)"> sell</span>{% endif %}
+            {% if p.Cost_for_rent %} <span style="color:var(--gold)">&#8377;{{ p.Cost_for_rent|floatformat:0 }}/mo</span><span style="font-size:.72rem;color:var(--text-3)"> rent</span>{% endif %}
+          </div>
+        </div>
+        <div class="prop-footer">
+          {% if p.availability == 'Available' %}<span class="badge b-available">Available</span>
+          {% elif p.availability == 'Sold' %}<span class="badge b-sold">Sold</span>
+          {% elif p.availability == 'Rented' %}<span class="badge b-rented">Rented</span>
+          {% else %}<span class="badge b-na">{{ p.availability }}</span>{% endif %}
+          <span style="font-size:.75rem;color:var(--text-3)">{{ p.area|floatformat:0 }} sqft</span>
+        </div>
+      </a>
+      {% empty %}<p style="color:var(--text-3)">No properties match your filters.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

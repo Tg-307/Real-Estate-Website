@@ -1,0 +1,48 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Potential Buyers{% endblock %}
+{% block nav_buyerslist %}active{% endblock %}
+{% block topbar_title %}Potential Buyers{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'agent_add_buyer' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Register Buyer</a>
+{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom:1.25rem">
+  <div class="card-header"><h3><i class="fas fa-filter"></i> Filters</h3><a href="{% url 'potential_buyers_list' %}" class="btn btn-ghost btn-sm">Clear</a></div>
+  <div class="card-body">
+    <form method="get">
+      <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+        <div class="form-group"><label class="form-label">Name</label><input type="text" name="name" class="form-control" placeholder="First or Last name" value="{{ filters.name }}"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control" placeholder="Contact number" value="{{ filters.phone }}"></div>
+        <div class="form-group"><label class="form-label">Preferred Type</label><select name="type" class="form-control form-select"><option value="">Any</option><option value="residential" {% if filters.type == 'residential' %}selected{% endif %}>Residential</option><option value="commercial" {% if filters.type == 'commercial' %}selected{% endif %}>Commercial</option><option value="land" {% if filters.type == 'land' %}selected{% endif %}>Land</option><option value="industrial" {% if filters.type == 'industrial' %}selected{% endif %}>Industrial</option></select></div>
+        <div class="form-group"><label class="form-label">Looking To</label><select name="choice" class="form-control form-select"><option value="">Any</option><option value="Buy" {% if filters.choice == 'Buy' %}selected{% endif %}>Buy</option><option value="Rent" {% if filters.choice == 'Rent' %}selected{% endif %}>Rent</option></select></div>
+        <div class="form-group"><label class="form-label">Preferred City</label><input type="text" name="city" class="form-control" value="{{ filters.city }}"></div>
+        <div class="form-group" style="justify-content:flex-end;padding-top:1.35rem"><button type="submit" class="btn btn-primary" style="width:100%"><i class="fas fa-search"></i> Search</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+<div style="font-size:.875rem;color:var(--text-3);margin-bottom:.75rem"><strong style="color:var(--text)">{{ count }}</strong> potential buyer{{ count|pluralize }} found</div>
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Contact</th><th>Type</th><th>Choice</th><th>Price Range &#8377;</th><th>City</th><th>BHK</th><th>Registered</th></tr></thead>
+      <tbody>
+        {% for b in buyers %}
+        <tr>
+          <td style="font-weight:500">{{ b.First_name }} {{ b.last_name }}</td>
+          <td>{{ b.Contact_no }}</td>
+          <td>{{ b.preferred_type|capfirst|default:"—" }}</td>
+          <td>{% if b.Choice %}<span class="badge {% if b.Choice == 'Buy' %}b-available{% else %}b-rented{% endif %}">{{ b.Choice }}</span>{% else %}—{% endif %}</td>
+          <td style="font-size:.82rem">{% if b.min_price %}&#8377;{{ b.min_price|floatformat:0 }}{% endif %}{% if b.min_price and b.max_price %} – {% endif %}{% if b.max_price %}&#8377;{{ b.max_price|floatformat:0 }}{% endif %}{% if not b.min_price and not b.max_price %}—{% endif %}</td>
+          <td>{{ b.preferred_city|default:"—" }}</td>
+          <td>{{ b.preferred_BHK|default:"—" }}</td>
+          <td style="font-size:.78rem;color:var(--text-3)">{{ b.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-3)">No potential buyers found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

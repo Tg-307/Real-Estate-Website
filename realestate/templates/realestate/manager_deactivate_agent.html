@@ -1,0 +1,49 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Deactivate Agent{% endblock %}
+{% block topbar_title %}Deactivate Agent — {{ agent.first_name }} {{ agent.last_name }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:760px">
+  <div class="card-header">
+    <h3><i class="fas fa-user-slash"></i> Reassign Properties Before Deactivation</h3>
+  </div>
+  <div class="card-body">
+    <div class="alert alert-info"><i class="fas fa-info-circle"></i> You must reassign all <strong>Available</strong> properties of this agent before deactivating them. Sold/Rented properties are not affected.</div>
+
+    {% if available_props %}
+    <form method="post" action="{% url 'manager_reassign_properties' %}">{% csrf_token %}
+      <input type="hidden" name="agent_id" value="{{ agent.employee_id }}">
+      {% for prop in available_props %}
+      <div style="background:var(--cream-2);border:1px solid var(--border);border-radius:10px;padding:.875rem 1rem;margin-bottom:.75rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+          <div>
+            <div style="font-weight:600;font-size:.9rem">Property #{{ prop.property_id }} — {{ prop.type|capfirst }}{% if prop.BHK %} {{ prop.BHK }}BHK{% endif %}</div>
+            <div style="font-size:.8rem;color:var(--text-3)"><i class="fas fa-map-marker-alt" style="color:var(--amber)"></i> {{ prop.address.street_name }}, {{ prop.address.city }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6rem">
+            <label style="font-size:.78rem;color:var(--text-3)">Reassign to:</label>
+            <select name="reassign_{{ prop.property_id }}" class="form-control form-select" style="width:auto" required>
+              <option value="">-- Select Agent --</option>
+              {% for a in active_agents %}
+              <option value="{{ a.employee_id }}">{{ a.first_name }} {{ a.last_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      <div style="display:flex;gap:.75rem;margin-top:1rem">
+        <button type="submit" class="btn btn-danger"><i class="fas fa-user-slash"></i> Reassign & Deactivate Agent</button>
+        <a href="{% url 'manager_dashboard' %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+    {% else %}
+    <p style="color:var(--text-3);margin-bottom:1rem">This agent has no available properties to reassign.</p>
+    <form method="post" action="{% url 'manager_reassign_properties' %}">{% csrf_token %}
+      <input type="hidden" name="agent_id" value="{{ agent.employee_id }}">
+      <button type="submit" class="btn btn-danger"><i class="fas fa-user-slash"></i> Deactivate Agent</button>
+      <a href="{% url 'manager_dashboard' %}" class="btn btn-ghost" style="margin-left:.5rem">Cancel</a>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

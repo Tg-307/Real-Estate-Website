@@ -1,0 +1,32 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Edit Property #{{ property.property_id }}{% endblock %}
+{% block topbar_title %}Edit Property #{{ property.property_id }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'property_detail' property.property_id %}" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+{% endblock %}
+{% block content %}
+<div class="card" style="max-width:760px">
+  <div class="card-header"><h3><i class="fas fa-edit"></i> Update Property Details</h3></div>
+  <div class="card-body">
+    <div class="alert alert-info" style="margin-bottom:1rem"><i class="fas fa-info-circle"></i> Address and seller cannot be changed after listing. Use Create Transaction to mark as Sold/Rented.</div>
+    <form method="post">{% csrf_token %}
+      <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);font-weight:600;margin-bottom:.75rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)">Property Info</div>
+      <div class="form-grid" style="margin-bottom:1.25rem">
+        <div class="form-group"><label class="form-label">BHK</label><input type="number" name="bhk" class="form-control" value="{{ property.BHK }}" min="1" max="10"></div>
+        <div class="form-group"><label class="form-label">Area (sqft)</label><input type="number" name="area" class="form-control" value="{{ property.area }}" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Carpet Area (sqft)</label><input type="number" name="carpet_area" class="form-control" value="{{ property.CARPET_area }}" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Sell Price &#8377;</label><input type="number" name="cost_for_sell" class="form-control" value="{{ property.cost_for_sell }}" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Rent/Month &#8377;</label><input type="number" name="cost_for_rent" class="form-control" value="{{ property.Cost_for_rent }}" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Seller Comm. Rate</label><input type="number" name="seller_commission_rate" class="form-control" value="{{ property.seller_commission_rate }}" step="0.001"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:1rem"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3">{{ property.description }}</textarea></div>
+      <div class="form-group" style="margin-bottom:1rem"><label class="form-label">Primary Image URL</label><input type="url" name="image_url" class="form-control" placeholder="https://...">
+      </div>
+      <div style="display:flex;gap:.75rem">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+        <a href="{% url 'property_detail' property.property_id %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

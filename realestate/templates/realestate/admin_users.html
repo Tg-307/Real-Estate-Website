@@ -1,0 +1,47 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Manage Users{% endblock %}
+{% block nav_users %}active{% endblock %}
+{% block topbar_title %}Manage Website Users{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'admin_add_manager' %}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> Add Manager</a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-users-cog"></i> All Users ({{ users.count }})</h3></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>User</th><th>Username</th><th>Role</th><th>Linked Employee</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="font-weight:500">{{ u.full_name }}</td>
+          <td style="font-size:.85rem;color:var(--text-3)">{{ u.username }}</td>
+          <td><span class="badge {% if u.role == 'admin' %}b-admin{% elif u.role == 'manager' %}b-manager{% else %}b-agent{% endif %}">{{ u.role }}</span></td>
+          <td style="font-size:.82rem">
+            {% if u.employee_fk %}
+              {% for e in employees %}{% if e.employee_id == u.employee_fk %}{{ e.first_name }} {{ e.last_name }} ({{ e.branch.branch_name }}){% endif %}{% endfor %}
+            {% else %}—{% endif %}
+          </td>
+          <td><span class="badge {% if u.is_active %}b-available{% else %}b-na{% endif %}">{% if u.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+          <td style="font-size:.78rem;color:var(--text-3)">{{ u.created_at|date:"d M Y" }}</td>
+          <td>
+            {% if u.user_id != request.user.user_id %}
+            <form method="post" action="{% url 'admin_toggle_user' u.user_id %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                {% if u.is_active %}Deactivate{% else %}Activate{% endif %}
+              </button>
+            </form>
+            {% else %}
+            <span style="font-size:.75rem;color:var(--text-3)">Current user</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-3)">No users found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

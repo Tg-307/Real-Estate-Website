@@ -1,0 +1,46 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Add Bid{% endblock %}
+{% block topbar_title %}Add Buyer Interest — Property #{{ property.property_id }}{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start">
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-gavel"></i> Record Buyer Interest</h3></div>
+  <div class="card-body">
+    <form method="post">{% csrf_token %}
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label required">Select Potential Buyer</label>
+        <select name="buyer_id" class="form-control form-select" required>
+          <option value="">-- Choose Buyer --</option>
+          {% for b in buyers %}
+          <option value="{{ b.buyer_id }}">{{ b.First_name }} {{ b.last_name }} — {{ b.Contact_no }}</option>
+          {% endfor %}
+        </select>
+        <span class="form-hint">Not listed? <a href="{{ add_buyer_url }}" style="color:var(--amber)">Register new potential buyer →</a></span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Offer Amount &#8377;</label><input type="number" name="offer_amount" class="form-control" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Buyer Comm. Rate</label><input type="number" name="commission_rate" class="form-control" value="0.005" step="0.001" min="0" max="0.2"><span class="form-hint">0.005 = 0.5%</span></div>
+        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+      </div>
+      <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Record Bid</button>
+        <a href="{% url 'property_detail' property.property_id %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-search"></i> Filter Buyers</h3></div>
+  <div class="card-body">
+    <form method="get" style="display:flex;flex-direction:column;gap:.75rem">
+      <div class="form-group"><label class="form-label">Search by Name</label><input type="text" name="search_name" class="form-control" placeholder="e.g. Rahul" value="{{ filters.search_name }}"></div>
+      <div class="form-group"><label class="form-label">Search by Phone</label><input type="text" name="search_phone" class="form-control" placeholder="10-digit number" value="{{ filters.search_phone }}"></div>
+      <button type="submit" class="btn btn-outline btn-sm"><i class="fas fa-filter"></i> Filter</button>
+      {% if filters %}<a href="{% url 'agent_add_bid' property.property_id %}" class="btn btn-ghost btn-sm">Clear</a>{% endif %}
+    </form>
+    <div style="margin-top:1rem;font-size:.78rem;color:var(--text-3)">{{ buyers|length }} buyer(s) shown</div>
+  </div>
+</div>
+</div>
+{% endblock %}

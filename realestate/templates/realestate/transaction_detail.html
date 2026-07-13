@@ -1,0 +1,61 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Transaction #{{ txn.transaction_id }}{% endblock %}
+{% block topbar_title %}Transaction #{{ txn.transaction_id }}{% endblock %}
+{% block topbar_actions %}
+  <a href="javascript:history.back()" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
+{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-home"></i> Property</h3></div>
+    <div class="card-body" style="font-size:.885rem;display:flex;flex-direction:column;gap:.55rem">
+      <div><strong>ID:</strong> #{{ txn.property.property_id }}</div>
+      <div><strong>Type:</strong> {{ txn.property.type|capfirst }}{% if txn.property.BHK %} · {{ txn.property.BHK }}BHK{% endif %}</div>
+      <div><strong>Area:</strong> {{ txn.property.area|floatformat:0 }} sqft</div>
+      <div><strong>Location:</strong> {{ txn.property.address.street_name }}, {{ txn.property.address.city }}, {{ txn.property.address.state }}</div>
+      <div><strong>Status:</strong> {% if txn.property.availability == 'Sold' %}<span class="badge b-sold">Sold</span>{% elif txn.property.availability == 'Rented' %}<span class="badge b-rented">Rented</span>{% else %}<span class="badge b-available">{{ txn.property.availability }}</span>{% endif %}</div>
+      <div><strong>Branch:</strong> {{ txn.property.agent.branch.branch_name }}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-file-invoice-dollar"></i> Transaction</h3></div>
+    <div class="card-body" style="font-size:.885rem;display:flex;flex-direction:column;gap:.55rem">
+      <div><strong>Agreed Price:</strong> <span style="font-family:'Times New Roman',serif;font-size:1.2rem;color:var(--amber)">&#8377;{{ txn.agreed_price|floatformat:0 }}</span></div>
+      <div><strong>Closing Date:</strong> {{ txn.closing_date }}</div>
+      <div><strong>Buyer Commission:</strong> {% widthratio txn.buyer_commission_rate 1 100 %}% → &#8377;{{ txn.get_buyer_commission|floatformat:0 }}</div>
+      <div><strong>Seller Commission:</strong> {% widthratio txn.seller_commission_rate 1 100 %}% → &#8377;{{ txn.get_seller_commission|floatformat:0 }}</div>
+      <div><strong>Total Office Commission:</strong> <span style="color:var(--rust-lt);font-weight:600">&#8377;{{ txn.get_total_office_commission|floatformat:0 }}</span></div>
+      {% if txn.comments %}<div><strong>Comments:</strong> {{ txn.comments }}</div>{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-user-tag"></i> Buyer</h3></div>
+    <div class="card-body" style="font-size:.885rem;display:flex;flex-direction:column;gap:.5rem">
+      <div><strong>Name:</strong> {{ txn.buyer.first_name }} {{ txn.buyer.last_name }}</div>
+      <div><strong>Phone:</strong> {{ txn.buyer.phone }}</div>
+      {% if txn.buyer.email %}<div><strong>Email:</strong> {{ txn.buyer.email }}</div>{% endif %}
+      <div><strong>City:</strong> {{ txn.buyer.city|default:"—" }}</div>
+      <div><strong>Aadhar:</strong> {{ txn.buyer.Aadhar_no }}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-user"></i> Seller</h3></div>
+    <div class="card-body" style="font-size:.885rem;display:flex;flex-direction:column;gap:.5rem">
+      <div><strong>Name:</strong> {{ txn.seller.first_name }} {{ txn.seller.last_name }}</div>
+      <div><strong>Phone:</strong> {{ txn.seller.phone }}</div>
+      {% if txn.seller.email %}<div><strong>Email:</strong> {{ txn.seller.email }}</div>{% endif %}
+      <div><strong>City:</strong> {{ txn.seller.city|default:"—" }}</div>
+    </div>
+  </div>
+  <div class="card" style="grid-column:1/-1">
+    <div class="card-header"><h3><i class="fas fa-user-tie"></i> Agent</h3></div>
+    <div class="card-body" style="font-size:.885rem;display:flex;gap:3rem;flex-wrap:wrap">
+      <div><strong>Name:</strong> {{ txn.agent.first_name }} {{ txn.agent.last_name }}</div>
+      <div><strong>Phone:</strong> {{ txn.agent.phone }}</div>
+      <div><strong>Email:</strong> {{ txn.agent.email }}</div>
+      <div><strong>Branch:</strong> {{ txn.agent.branch.branch_name }}</div>
+      <div><strong>Commission Rate:</strong> {{ txn.agent.commission }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

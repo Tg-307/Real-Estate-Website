@@ -1,0 +1,72 @@
+{% extends 'realestate/base.html' %}
+{% block title %}Branch Analysis{% endblock %}
+{% block nav_branchanalysis %}active{% endblock %}
+{% block topbar_title %}Branch Analysis{% if branch %} — {{ branch.branch_name }}{% endif %}{% endblock %}
+{% block content %}
+<div class="stats-grid" style="margin-bottom:1.25rem">
+  <div class="stat-card c1"><div class="stat-icon"><i class="fas fa-file-invoice-dollar"></i></div><div class="stat-value">{{ txns.count }}</div><div class="stat-label">Transactions</div></div>
+  <div class="stat-card c4"><div class="stat-icon"><i class="fas fa-rupee-sign"></i></div><div class="stat-value" style="font-size:1.1rem">&#8377;{{ total_revenue|floatformat:0 }}</div><div class="stat-label">Total Revenue</div></div>
+  <div class="stat-card c3"><div class="stat-icon"><i class="fas fa-percentage"></i></div><div class="stat-value" style="font-size:1.1rem">&#8377;{{ total_commission|floatformat:0 }}</div><div class="stat-label">Total Commission</div></div>
+</div>
+
+{% if yearly %}
+<div class="card" style="margin-bottom:1.25rem">
+  <div class="card-header"><h3><i class="fas fa-chart-bar"></i> Year-wise</h3></div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1rem">
+      {% for y in yearly %}
+      <div style="text-align:center;background:var(--cream-2);border:1px solid var(--border);border-radius:10px;padding:.875rem">
+        <div style="font-family:'Times New Roman',serif;font-size:1.4rem;font-weight:700;color:var(--amber)">{{ y.yr }}</div>
+        <div style="font-size:.7rem;text-transform:uppercase;color:var(--text-3);margin:.25rem 0">{{ y.count }} deals</div>
+        <div style="font-size:.82rem;font-weight:600">&#8377;{{ y.total|floatformat:0 }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:1.25rem">
+  <div class="card-header"><h3><i class="fas fa-filter"></i> Filters</h3><a href="{% url 'branch_analysis' %}" class="btn btn-ghost btn-sm">Clear</a></div>
+  <div class="card-body">
+    <form method="get">
+      <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr))">
+        <div class="form-group"><label class="form-label">Agent Name</label><input type="text" name="agent_name" class="form-control" placeholder="First or last name" value="{{ filters.agent_name }}"></div>
+        <div class="form-group"><label class="form-label">Status</label><select name="status" class="form-control form-select"><option value="">Any</option><option value="Sold" {% if filters.status == 'Sold' %}selected{% endif %}>Sold</option><option value="Rented" {% if filters.status == 'Rented' %}selected{% endif %}>Rented</option></select></div>
+        <div class="form-group"><label class="form-label">City</label><input type="text" name="city" class="form-control" value="{{ filters.city }}"></div>
+        <div class="form-group"><label class="form-label">State</label><input type="text" name="state" class="form-control" value="{{ filters.state }}"></div>
+        <div class="form-group"><label class="form-label">Min Price &#8377;</label><input type="number" name="min_price" class="form-control" value="{{ filters.min_price }}"></div>
+        <div class="form-group"><label class="form-label">Max Price &#8377;</label><input type="number" name="max_price" class="form-control" value="{{ filters.max_price }}"></div>
+        <div class="form-group"><label class="form-label">Close From</label><input type="date" name="date_from" class="form-control" value="{{ filters.date_from }}"></div>
+        <div class="form-group"><label class="form-label">Close To</label><input type="date" name="date_to" class="form-control" value="{{ filters.date_to }}"></div>
+        <div class="form-group" style="justify-content:flex-end;padding-top:1.35rem"><button type="submit" class="btn btn-primary" style="width:100%"><i class="fas fa-search"></i> Apply</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3><i class="fas fa-list"></i> Transactions ({{ txns.count }})</h3></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>#</th><th>Property</th><th>Status</th><th>Price</th><th>Comm.</th><th>Agent</th><th>Closed</th><th></th></tr></thead>
+      <tbody>
+        {% for t in txns %}
+        <tr>
+          <td style="color:var(--amber);font-weight:600">#{{ t.transaction_id }}</td>
+          <td><div style="font-size:.84rem;font-weight:500">{{ t.property.address.city }}</div><div style="font-size:.75rem;color:var(--text-3)">{{ t.property.type }}</div></td>
+          <td>{% with av=t.property.availability %}{% if av == 'Sold' %}<span class="badge b-sold">Sold</span>{% elif av == 'Rented' %}<span class="badge b-rented">Rented</span>{% else %}<span class="badge b-na">{{ av }}</span>{% endif %}{% endwith %}</td>
+          <td style="font-weight:700">&#8377;{{ t.agreed_price|floatformat:0 }}</td>
+          <td style="color:var(--rust-lt);font-size:.85rem">&#8377;{{ t.get_total_office_commission|floatformat:0 }}</td>
+          <td style="font-size:.82rem">{{ t.agent.first_name }} {{ t.agent.last_name }}</td>
+          <td style="font-size:.78rem;color:var(--text-3)">{{ t.closing_date }}</td>
+          <td><a href="{% url 'transaction_detail' t.transaction_id %}" class="btn btn-ghost btn-sm">Show More</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-3)">No transactions match your filters</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

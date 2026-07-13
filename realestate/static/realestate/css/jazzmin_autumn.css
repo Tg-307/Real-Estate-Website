@@ -1,0 +1,49 @@
+/* Jazzmin Autumn Theme Overrides */
+:root {
+  --autumn-amber: #D4701A;
+  --autumn-bark:  #3D2008;
+  --autumn-cream: #FDF6EC;
+}
+
+/* Brand accent */
+.brand-link, .navbar-brand {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  letter-spacing: .02em;
+}
+
+/* Sidebar icons */
+.nav-sidebar .nav-icon { color: var(--autumn-amber) !important; }
+
+/* Card headers */
+.card-header {
+  background: linear-gradient(90deg, rgba(61,32,8,.05), transparent) !important;
+  border-bottom-color: rgba(212,112,26,.2) !important;
+}
+
+/* Table header */
+.table thead th {
+  background: linear-gradient(90deg, var(--autumn-bark), #5C3510) !important;
+  color: #FDF6EC !important;
+  border: none !important;
+  font-size: .78rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: .06em !important;
+}
+
+/* Change list rows */
+.results tbody tr:hover td { background: rgba(212,112,26,.05) !important; }
+
+/* Submit buttons */
+input[type=submit].default, .btn-warning {
+  background: linear-gradient(135deg, #D4701A, #C4451C) !important;
+  border-color: #D4701A !important;
+}
+
+/* Login page */
+#login-page {
+  background: linear-gradient(135deg, #2C1506, #4a2010, #7a3515) !important;
+}
+
+/* Dashboard widgets */
+.info-box { border-left: 4px solid var(--autumn-amber) !important; }
+.small-box { border-radius: 12px !important; overflow: hidden; }
